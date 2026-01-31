@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Text, TouchableOpacity, View } from 'react-native';
+import { Text, View, ActivityIndicator } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { useAuth } from '../hooks/useAuth';
 import { LoginScreen } from '../screens/LoginScreen';
@@ -10,6 +11,7 @@ import { TodayScreen } from '../screens/TodayScreen';
 import { TrackingScreen } from '../screens/TrackingScreen';
 import { LibraryScreen } from '../screens/LibraryScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
+import { OnboardingNavigator } from './OnboardingNavigator';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -93,20 +95,60 @@ function MainTabs() {
   );
 }
 
-export function AppNavigator() {
-  const { user, loading } = useAuth();
+function LoadingScreen() {
+  return (
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
+      <ActivityIndicator size="large" color="#3b82f6" />
+    </View>
+  );
+}
 
-  if (loading) {
-    return null;
+export function AppNavigator() {
+  const { user, loading: authLoading } = useAuth();
+  const [onboardingComplete, setOnboardingComplete] = useState<boolean | null>(null);
+  const [checkingOnboarding, setCheckingOnboarding] = useState(true);
+
+  useEffect(() => {
+    checkOnboardingStatus();
+  }, [user]);
+
+  const checkOnboardingStatus = async () => {
+    if (!user) {
+      setOnboardingComplete(null);
+      setCheckingOnboarding(false);
+      return;
+    }
+
+    try {
+      const status = await AsyncStorage.getItem('onboarding_complete');
+      setOnboardingComplete(status === 'true');
+    } catch (err) {
+      console.error('Error checking onboarding status:', err);
+      setOnboardingComplete(false);
+    } finally {
+      setCheckingOnboarding(false);
+    }
+  };
+
+  const handleOnboardingComplete = () => {
+    setOnboardingComplete(true);
+  };
+
+  if (authLoading || checkingOnboarding) {
+    return <LoadingScreen />;
   }
 
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {user ? (
-          <Stack.Screen name="Main" component={MainTabs} />
-        ) : (
+        {!user ? (
           <Stack.Screen name="Login" component={LoginScreen} />
+        ) : !onboardingComplete ? (
+          <Stack.Screen name="Onboarding">
+            {() => <OnboardingNavigator onComplete={handleOnboardingComplete} />}
+          </Stack.Screen>
+        ) : (
+          <Stack.Screen name="Main" component={MainTabs} />
         )}
       </Stack.Navigator>
     </NavigationContainer>
