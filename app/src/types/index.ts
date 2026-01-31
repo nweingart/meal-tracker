@@ -1,0 +1,86 @@
+export interface UserProfile {
+  id: string;
+  user_id: string;
+  gender: 'male' | 'female' | 'other' | null;
+  age: number | null;
+  height_inches: number | null;
+  weight_lbs: number | null;
+  activity_level: 'sedentary' | 'light' | 'moderate' | 'active' | 'very_active' | null;
+  diet_plan: 'maintain' | 'lose' | 'gain' | null;
+  calorie_target: number | null;
+  protein_target_g: number | null;
+  carbs_target_g: number | null;
+  fat_target_g: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Food {
+  id: string;
+  user_id: string;
+  name: string;
+  serving_unit: string;
+  calories_per_serving: number;
+  protein_per_serving: number;
+  carbs_per_serving: number;
+  fat_per_serving: number;
+  times_used: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MealLogEntry {
+  id: string;
+  user_id: string;
+  food_library_id: string;
+  servings: number;
+  logged_at: string;
+  created_at: string;
+  food?: Food;
+}
+
+export interface DailyLog {
+  entries: MealLogEntry[];
+  totals: MacroTotals;
+}
+
+export interface MacroTotals {
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+}
+
+export interface MacroTargets {
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+}
+
+export interface ParsedFood {
+  name: string;
+  servings: number;
+  serving_unit: string;
+  calories_per_serving: number;
+  protein_per_serving: number;
+  carbs_per_serving: number;
+  fat_per_serving: number;
+}
+
+export interface TrackingSummary {
+  start_date: string;
+  end_date: string;
+  days_logged: number;
+  avg_calories: number;
+  avg_protein: number;
+  avg_carbs: number;
+  avg_fat: number;
+  daily_data: {
+    date: string;
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+  }[];
+}
